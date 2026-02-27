@@ -18,6 +18,7 @@ operation Main() : (Result, Result) {
     let (m1, m2) = (M(q1), M(q2));
     
     // Reset q1 and q2 to the 0 state.
+    // This is necessary to avoid leaving qubits in an unknown state, which can cause issues in larger programs.
     Reset(q1);
     Reset(q2);
     
