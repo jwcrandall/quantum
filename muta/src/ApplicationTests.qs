@@ -8,7 +8,7 @@ namespace MuTA.ApplicationTests {
     import MuTA.Applications.*;
 
     function Near(actual : Double, expected : Double, tolerance : Double, description : String) : Unit {
-        if AbsD(actual - expected) > tolerance {
+        if IsNaN(actual) or IsInfinite(actual) or AbsD(actual - expected) > tolerance {
             fail $"{description}: expected {expected}, got {actual}.";
         }
     }
