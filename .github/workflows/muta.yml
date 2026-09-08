@@ -1,0 +1,25 @@
+name: MuTA Q#
+
+on:
+  push:
+    paths: ["muta/**", ".github/workflows/muta.yml"]
+  pull_request:
+    paths: ["muta/**", ".github/workflows/muta.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: muta/requirements-dev.txt
+      - run: python -m pip install -r muta/requirements-dev.txt
+      - run: python -m pytest muta/tests -q
+      - run: python muta/run.py --example all --seed 42
