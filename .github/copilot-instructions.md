@@ -3,6 +3,7 @@
 ## Project shape
 
 - This is a modern Q# project for the Azure Quantum Development Kit (QDK).
+- `muta/` is an independent Q# project for measurement-based quantum machine learning. Load it with `from qdk import qsharp` and `qsharp.init(project_root="muta")` from the repository root; do not include the neighboring katas in its compilation context.
 - `main.qs` is a standalone scratch program that demonstrates allocation, entanglement, state inspection, measurement, and reset.
 - `qdk-learning/` is a kata corpus grouped by quantum-computing topic:
   - `exercises/` contains intentionally incomplete operations and functions. Preserve the requested callable name, signature, characteristics, and supplied helpers because the learning environment expects that contract.
@@ -12,7 +13,38 @@
 
 ## Run and validate
 
-Use the QDK VS Code extension or the `qsharp` CLI. There is no repository-wide build, test, or lint configuration; validate the individual file being changed.
+### MuTA
+
+Use the Python QDK dependency pinned in `muta/requirements-dev.txt`. CI uses Python 3.12. From the repository root:
+
+```bash
+python -m venv .venv
+.venv/bin/python -m pip install -r muta/requirements-dev.txt
+
+# Full MuTA suite.
+.venv/bin/python -m pytest muta/tests -q
+
+# One parametrized Q# check (quote the brackets for shell compatibility).
+.venv/bin/python -m pytest 'muta/tests/test_muta.py::test_training_algorithms[TestAdam]' -q
+
+# One Python-side contract check.
+.venv/bin/python -m pytest muta/tests/test_muta.py::test_angle_and_slice_conventions -q
+
+# One experiment, or all experiments as run in CI.
+.venv/bin/python muta/run.py --example gates --seed 42
+.venv/bin/python muta/run.py --example all --seed 42
+
+# Compile the isolated quantum workload to Adaptive_RI QIR.
+.venv/bin/python muta/export_qir.py --output /tmp/muta.ll
+```
+
+Use the equivalent environment interpreter on other operating systems. `.github/workflows/muta.yml` runs the suite and all examples for changes to MuTA or its workflow.
+
+The mathematical checks live in `muta/src/{Core,Training,Application}Tests.qs`; `muta/tests/test_muta.py` initializes a fresh QDK context for each test, sets both quantum and classical seeds, invokes named Q# checks, and asserts expected failures. Register new Q# checks in the relevant pytest parametrization so CI executes them. Core channel comparisons use entangled reference states and independent circuit implementations to detect relative-phase errors, not just measurement-frequency differences.
+
+### Scratch program and katas
+
+Use the QDK VS Code extension or the `qsharp` CLI to validate each standalone file.
 
 ```bash
 # Run the root program.
@@ -25,7 +57,19 @@ qsharp run qdk-learning/examples/oracles/oracles__test_meeting_oracle.qs
 qsharp run qdk-learning/examples/grovers_search/grovers_search__e2edemo.qs
 ```
 
-Files under `exercises/` generally have no entry point and are intended to be invoked by the QDK learning environment. For an exercise change, use editor diagnostics on that file and run the corresponding file under `examples/<topic>/` when one exists. Self-checking examples report outcomes with `Message`; there is no separate unit-test runner or single-test selector.
+Files under `exercises/` generally have no entry point and are intended to be invoked by the QDK learning environment. For an exercise change, use editor diagnostics on that file and run the corresponding file under `examples/<topic>/` when one exists. Those examples are separate programs, not harnesses that import the exercise implementation. Self-checking kata examples report outcomes with `Message`; inspect failure messages rather than relying only on exit status or a final success message.
+
+## MuTA architecture and contracts
+
+- Quantum primitives, classical optimizers, and application algorithms all live in Q#. Python's `run.py`, `export_qir.py`, and pytest harness manage execution and compiler contexts rather than implement the algorithms.
+- `MuTA.Core` constructs open graph patterns with supplied causal flow, composes layers, executes measurement-based computations, and translates equal-input/output patterns into reversible circuits. `MuTA.Applications` builds losses, classifiers, teleportation, kernels/SVMs, and noise models on Core. `MuTA.Training` accepts objective callbacks of type `Double[] => Double`; `MuTA.Examples` connects application objectives to trainers. `MuTA.Expressivity` provides bounded Pauli-word Lie closure and a conditional variance bound.
+- `export_qir.py` deliberately loads only `Core.qs` and `QuantumEntry.qs` under `Adaptive_RI`. Preserve this boundary: the full hybrid project uses `Std.Random` for host/simulator sampling and cannot be compiled wholesale under that profile. The exporter generates QIR, not hardware jobs.
+- Layer vertices are numbered `5 * row + column`, but angle arrays and returned measurement outcomes use `pattern.Order` slots, not vertex IDs. Outputs have no angle. Use `AnglesFromVertices` for vertex-labelled data and `ParameterSlices` for optimizer slices; slices partition canonical angle indices without reordering the parameter vector. `Concatenate` joins output/input **vertex IDs**, not interface-array positions.
+- `Execute` consumes and resets the input register. The output register must be disjoint, start in the zero state, and be cleaned up by the caller; corrected outputs follow `pattern.Outputs`. `ExecuteWithNoise` calls its noise operation once on the complete entangled resource before measurements.
+- The equatorial measurement convention gives a corrected wire step `H Rz(-alpha)`. `Execute` applies physical outcome-dependent Pauli corrections while leaving nominal angles unchanged. Preserve the minus sign and output ordering when changing the circuit translation; `ApplyCompiled` remains `Adj + Ctl`.
+- Trainers return the best evaluated parameters, not the last explored parameters. `History` records best-so-far loss after every objective evaluation; derivative probes count toward `Evaluations` and the evaluation budget and may improve the incumbent. Parameter shift is valid for independent Pauli-generated rotations with linear expectation/fidelity objectives; tied parameters and nonlinear classifier losses need finite differences or a suitable chain rule.
+- Set both QDK quantum and classical seeds for repeatable runs. Keep sampled noisy labels fixed for a fixed corrupted dataset; resource noise is sampled per execution. Resource depolarization uses total nonidentity Pauli probability `p`, with `p/3` for each of X, Y, and Z. SVM labels are `-1/+1`; QFI classifier labels are `0/1`.
+- Consult `muta/README.md` for public usage and `muta/docs/paper-coverage.md` for operator conventions, paper mappings, and implementation limits. Keep claims scoped to the implemented algorithms and small demonstrations, rather than reproduction of the paper's numerical figures or a demonstrated learning advantage.
 
 ## Q# conventions
 

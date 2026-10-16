@@ -16,17 +16,19 @@ neighboring learning exercises intentionally reuse namespaces and callable names
 
 ## Run locally
 
-Use the modern Python QDK package, pinned to `qdk==1.32.0`. From the repository
-root, a separate environment can be prepared with:
+Use Python 3.12, as in CI, and the modern Python QDK package, pinned to
+`qdk==1.32.0`. From the repository root, a separate environment can be prepared
+with:
 
 ```sh
-python -m venv .venv
+python3.12 -m venv .venv
 .venv/bin/python -m pip install -r muta/requirements-dev.txt
 .venv/bin/python -m pytest muta/tests -q
 .venv/bin/python muta/run.py --example gates --seed 42
 ```
 
-Use the corresponding environment interpreter on other operating systems.
+The commands use macOS/Linux paths. On Windows, create the environment with
+`py -3.12 -m venv .venv` and use `.venv\Scripts\python.exe` instead.
 The runner accepts `gates`, `greedy`, `dqn`, `classifier`, `teleportation`,
 `kernel`, `noise`, `noise-training`, or `all` as its example. For example:
 
@@ -61,6 +63,141 @@ from qdk import qsharp
 qsharp.init(project_root="muta")
 print(qsharp.eval("MuTA.Core.Layer(2, 0, [1])"))
 ```
+
+## Train once, then predict
+
+After the environment setup above, the quickest training demonstrations are:
+
+```sh
+.venv/bin/python muta/run.py --example classifier --seed 42
+.venv/bin/python muta/run.py --example kernel --seed 42
+```
+
+`classifier` prints `(initial training loss, reevaluated fitted training loss,
+objective evaluations)`, not predicted labels. `kernel` prints `(predicted
+labels, kernel matrix)`, but those predictions are on the **training samples**.
+Neither command saves a model; every invocation trains from scratch. There are
+no separate `train` or `predict` subcommands.
+
+For separate training and prediction runs, the following walkthrough saves the
+quantum-state classifier's fitted parameters to JSON and loads them in a new
+Python process. Run both blocks from the **repository root** after setup.
+The shell blocks work in Bash/Zsh; on other systems, save each Python body as a
+script and run it with the environment's interpreter.
+
+### 1. Train and save the classifier
+
+This uses the same six-state diagnostic dataset and Adam configuration as
+`ClassifierLearning` in [`src/Examples.qs`](src/Examples.qs). It jointly fits four
+shared measurement angles and six polynomial-head coefficients. Finite
+differences (`false` in `AdamDefaults`) are required here rather than applying
+parameter shift directly to this tied, nonlinear objective.
+
+```sh
+.venv/bin/python - <<'PY'
+import json
+from pathlib import Path
+
+from qdk import qsharp
+
+qsharp.init(project_root="muta")
+qsharp.set_quantum_seed(42)
+qsharp.set_classical_seed(42)
+
+parameters, initial_loss, best_loss, evaluations = qsharp.eval("""
+    let initial = [0.1, -0.1, 0.1, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0];
+    let fit = MuTA.Training.TrainAdam(
+        MuTA.Examples.JointClassifierObjective,
+        initial,
+        MuTA.Examples.AdamDefaults(8, 0.08, false)
+    );
+    (fit.Parameters, fit.History[0], fit.Loss, fit.Evaluations)
+""")
+
+model_path = Path("muta-classifier.json")
+model_path.write_text(
+    json.dumps({"parameters": parameters}, indent=2, allow_nan=False) + "\n",
+    encoding="utf-8",
+)
+print(f"Initial training loss: {initial_loss}")
+print(f"Best observed training loss: {best_loss}; evaluations: {evaluations}")
+print(f"Saved {model_path}")
+PY
+```
+
+The file contains the **best evaluated** parameters, not necessarily the final
+optimizer step: positions `0..3` are shared wire angles and `4..9` are head
+coefficients. Keep this ordering and the same two-wire pattern for prediction.
+Rerunning this block starts a new fit and overwrites `muta-classifier.json`; it
+does not resume optimizer state. The printed losses are sampled training
+objectives, not held-out accuracy or a guarantee of convergence.
+
+### 2. Load the model and predict a new state
+
+This block does **not** invoke a trainer. It prepares a new two-qubit state from
+family `0` with `theta = 0.3` and `phi = 0.4` radians, estimates its output
+probabilities with the saved angles, and applies the saved polynomial head.
+These state parameters are not one of the six training examples.
+
+```sh
+.venv/bin/python - <<'PY'
+import json
+from pathlib import Path
+
+from qdk import qsharp
+
+model = json.loads(Path("muta-classifier.json").read_text(encoding="utf-8"))
+parameters_qs = json.dumps(model["parameters"], allow_nan=False)
+
+qsharp.init(project_root="muta")
+qsharp.set_quantum_seed(43)
+qsharp.set_classical_seed(43)
+
+p00, p11, score, label = qsharp.eval(f"""
+    let parameters = {parameters_qs};
+    let pattern = MuTA.Core.Layer(2, -1, []);
+    let angles = MuTA.Applications.TiedClassifierAngles(pattern, parameters[0..3]);
+    let probabilities = MuTA.Applications.ClassifierProbabilities(
+        pattern,
+        angles,
+        MuTA.Applications.PrepareStateFamily(0, 0.3, 0.4, _),
+        1024
+    );
+    let score = MuTA.Applications.PolynomialHead(parameters[4..9], probabilities);
+    let (p00, p11) = probabilities;
+    (p00, p11, score, score > 2.0 ? 1 | 0)
+""")
+
+print(f"p00={p00:.4f}, p11={p11:.4f}")
+print(f"Classifier score={score:.4f}; predicted label={label}")
+PY
+```
+
+The classifier's boundary is the standard quantum limit, **2.0**, not zero or
+0.5: this example assigns label `1` above it and `0` otherwise. The polynomial
+score is not a probability or a guaranteed exact QFI value. Each of the 1,024
+shots prepares a fresh copy of the input state; predictions can fluctuate with
+sampling, especially near the boundary.
+
+To predict again, rerun only step 2, changing the arguments to
+`PrepareStateFamily` or replacing it with your own state-preparation operation.
+For your own training set, supply a preparation callback and matching `0/1`
+labels to `QuantumClassifierLoss` instead of `JointClassifierObjective`, then
+retrain. Use independent labeled states to measure held-out accuracy; this
+small walkthrough demonstrates the workflow, not a useful accuracy guarantee.
+
+### Other training and prediction tasks
+
+| Task | What to retain after training | How to use it without retraining |
+| --- | --- | --- |
+| Continuous or discrete gate learning (`TrainAdam`, `GreedyOptimize`, `TrainDqn`) | `TrainingResult.Parameters` and the matching pattern/parameter mapping. | Reconstruct the full angle vector, prepare a new input, and use `Execute` or `ApplyCompiled`. Measure or otherwise consume the output: these models produce quantum states, not class labels. |
+| Classical-data kernel classification (`TrainSvm`) | The `SvmModel` fields **and the ordered training feature vectors**. | For a new two-feature point `x`, compute `MuTAKernel(x, training[i], shots)` for every training point in the original order, then pass that vector to `PredictSvm`. Labels are `-1/+1`. |
+
+The kernel feature map is fixed; `TrainSvm` fits the classical SVM rather than
+optimizing its MuTA measurement angles. A kernel matrix of only the new inputs
+is not sufficient for prediction: similarities must be against the saved
+training points. Python handles model storage and QDK execution in the
+walkthrough above; training and prediction calculations remain in Q#.
 
 ## Library organization
 

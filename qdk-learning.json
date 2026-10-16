@@ -1,10 +1,17 @@
 {
   "version": 1,
   "position": {
-    "courseId": "katas",
-    "unitId": "getting_started",
-    "activityId": "getting_started__welcome"
+    "courseId": "chemistry-qpe",
+    "unitId": "overview",
+    "activityId": "c-051cf8b54a1f"
   },
   "completions": {},
-  "startedAt": "2026-06-15T22:04:32.293Z"
+  "startedAt": "2026-06-15T22:04:32.293Z",
+  "pythonEnvironments": {
+    "chemistry-qpe": {
+      "id": "/usr/local/bin/python3",
+      "path": "/usr/local/bin/python3"
+    }
+  },
+  "courseSelected": true
 }
