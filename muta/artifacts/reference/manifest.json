@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "config": {
+    "seeds": [
+      11,
+      29,
+      47,
+      71,
+      101
+    ],
+    "train_states": 6,
+    "test_states": 24,
+    "train_shots": 16,
+    "test_shots": 256,
+    "gate_steps": 24,
+    "entangler_steps": 24,
+    "discrete_budget": 97,
+    "classifier_train_per_family": 6,
+    "classifier_test_per_family": 16,
+    "classifier_steps": 12,
+    "classifier_shots": 32,
+    "teleport_steps": 16,
+    "teleport_full_steps": 12,
+    "teleport_shots": 8,
+    "teleport_test_shots": 128,
+    "noise_steps": 12,
+    "kernel_train_per_class": 4,
+    "kernel_test_per_class": 8,
+    "kernel_shots": 128,
+    "shot_sweep": [
+      32,
+      128,
+      512
+    ],
+    "resource_noise": [
+      0.0,
+      0.01,
+      0.03,
+      0.05,
+      0.1,
+      0.2
+    ]
+  },
+  "git_head": "1aed8bc5cb508df6be84f0f7cc3dffc4e0287a7b",
+  "git_status": [
+    " M muta/README.md",
+    " M muta/docs/paper-coverage.md",
+    " M muta/src/ApplicationTests.qs",
+    " M muta/tests/test_muta.py",
+    "?? muta/artifacts/",
+    "?? muta/benchmarks.py",
+    "?? muta/notebooks/",
+    "?? muta/requirements-notebook.txt",
+    "?? muta/src/Benchmarks.qs",
+    "?? muta/tests/test_notebook.py"
+  ],
+  "source_sha256": {
+    "src/ApplicationTests.qs": "90232472ce209b54b5a4876b877dace723ace547cdff20dfafa1ede7fd86be62",
+    "src/Applications.qs": "89310b2949bc0a269c6a053b789a29957d44980f64956aa1055206f77aaf2e36",
+    "src/Benchmarks.qs": "d31d4772e241ecb82749812fd01a46e5ea24afae99a6cc79ffc70f434943c02e",
+    "src/Core.qs": "f47b0c782f020ba8a4dc51e3f266a37cf871e0c9253a5b40f5f70db03c5569ea",
+    "src/CoreTests.qs": "e128837b0e3b5a93a27d190ba5e24d5db7680c409f23b59178b445be3454b84b",
+    "src/Examples.qs": "bcdc468acda34434b99fd3a35ad03e0c48b1f5ca85b7bbf0dd92fe4168f34768",
+    "src/Expressivity.qs": "608023707a4a850dedd56af3906cfb8cb88a55a96828f8a81a1b5e372b59e5ef",
+    "src/QuantumEntry.qs": "480a52ffef62ea08299dbbe71de3fc86cf8abd60ae85c53a51d5a96a3fcc917f",
+    "src/Training.qs": "5b4bb073d4d1934dc487ecdd9b22686c07f1f8bbfecac12c11cc5cba0d13c992",
+    "src/TrainingTests.qs": "83066bf6d0d7df71d73087b3c589c9ff5a1ffb999366d5ff13818ac0c447d26a",
+    "benchmarks.py": "ddd171bdf098df1e0fb8925280653573a8e0c227f20ad44cee70077e460908bc",
+    "qsharp.json": "9ce929b74181967c826d1a4a0a44296b3b5cd1dead5b97af6e8561d18c5f7c31",
+    "requirements-dev.txt": "d12ee935aae177200aad38375c148b2fd90611fd498db99ef976f5d69795f040",
+    "requirements-notebook.txt": "ca72d2b6a846568225f76a229ee8593485fdfb5a547c3f5f6c1adb2baba7c8d8"
+  },
+  "python": "3.12.12",
+  "system": "Darwin",
+  "machine": "x86_64",
+  "packages": {
+    "qdk": "1.32.0",
+    "numpy": "2.5.4",
+    "matplotlib": "3.11.2",
+    "nbformat": "5.11.1",
+    "nbclient": "0.11.0",
+    "nbconvert": "7.17.2",
+    "ipykernel": "7.4.0"
+  },
+  "seed_scheme": "First 32 SHA-256 bits of muta-reference-v1:<seed>:<stream>:quantum|classical",
+  "wall_seconds": 4373.568702666002,
+  "backend": "QDK local simulator; physical outcome-corrected MBQC; no hardware jobs",
+  "uncertainty": "Mean and sample SD across independent seeds, not confidence intervals.",
+  "notebook_source_sha256": "44abf13e7c515cf3a052696f078f8dd731b3f654f173159e22a09c39872071fc",
+  "artifacts_sha256": {
+    "datasets.json": "ffb59543a6dac41f3353a317f797905eddc19a86c678bce68a9264a1439c203f",
+    "models.json": "11f1bcbb6de44bf1456c50b83e6115383991e3a34e48b452f42fdbf7b36b7e67",
+    "results.json": "2f5d7cb9ffbd7afe2849f9e1df3938919c669ca1385bcdece582d42109262b39",
+    "summary.csv": "b36f19c6bbf262a3f7525760b857810d6d59ce5617c11af691c4f3c02e22e40c",
+    "figure-1-caption.txt": "963cb147a337663bbae6b641ce3815704eec824d527d9109dd09143a5e59665b",
+    "figure-1.pdf": "8b4339ed132960643d4ecbe8db85ec7da53b393f0f141a732170a7f1b08bb95f",
+    "figure-1.svg": "d408cc1aef788ddb1bdab0c5f050d0cf43f41397e3118104df23a1b632a7bb1f",
+    "figure-1.png": "26cf39649d685d62e9104d35d969561e8f2aa911afd6650c36a4e38cd2105719",
+    "diagnostics.pdf": "e5217c6443783ebaa371b976b82e797daa24192ea7f8cbf59c1a667a2bad26e7",
+    "diagnostics.svg": "feab826bd9845bf0817167a594264aeb57f685513276ac72e745e9d8594f850f",
+    "diagnostics.png": "02781fa4ce69c1011afba999b404526f0623a2a15a77e0623b6fccb2e06cea18"
+  },
+  "reference_notebook_source_sha256": "b6db2040ba400845b173cd73ad6c604826a4c776d2d13566377177ad3c1686cb",
+  "rendering_refresh": {
+    "timestamp_utc": "2026-10-25T17:15:14.948573+00:00",
+    "seconds": 5.566197333013406,
+    "cell_ids": [
+      "figures"
+    ],
+    "reason": "Suppress overlapping minor tick labels on logarithmic diagnostic axes.",
+    "measurement_changes": false,
+    "note": "Only figure rendering was reexecuted; wall_seconds retains the original complete reference run."
+  }
+}

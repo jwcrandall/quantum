@@ -88,7 +88,7 @@ def test_invalid_training_inputs(qs, name):
 
 @pytest.mark.parametrize("name", [
     "TestStatePreparationAndGateLoss", "TestNoiseModels", "TestClassifier",
-    "TestTeleportation", "TestKernelsAndSvm",
+    "TestTeleportation", "TestKernelsAndSvm", "TestBenchmarkTargets",
 ])
 def test_applications(qs, name):
     qs.eval(f"MuTA.ApplicationTests.{name}()")

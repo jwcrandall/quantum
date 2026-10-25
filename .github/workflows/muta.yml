@@ -19,7 +19,9 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: muta/requirements-dev.txt
-      - run: python -m pip install -r muta/requirements-dev.txt
+          cache-dependency-path: |
+            muta/requirements-dev.txt
+            muta/requirements-notebook.txt
+      - run: python -m pip install -r muta/requirements-notebook.txt
       - run: python -m pytest muta/tests -q
       - run: python muta/run.py --example all --seed 42
