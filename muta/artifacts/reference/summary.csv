@@ -1,0 +1,25 @@
+group,experiment,metric,runs,mean,sd,initial_mean,initial_sd
+gate,single,held-out infidelity,5,0.01748046875,0.013094679915516978,0.25885416666666666,0.014113120816179945
+gate,entangling,held-out infidelity,5,0.015364583333333334,0.007943308656445804,0.15380859375,0.015336229272011144
+gate,restricted_adam,held-out infidelity,5,0.06142578125,0.03159200231638293,0.49775390625,0.02763703506702079
+gate,restricted_greedy,held-out infidelity,5,0.0,0.0,0.49166666666666664,0.024435320606054262
+gate,restricted_dqn,held-out infidelity,5,0.04599609375,0.035688278780618345,0.4903971354166667,0.03276662697930323
+classifier,initial:S1,balanced accuracy,5,0.5,0.0,,
+classifier,initial:S2,balanced accuracy,5,0.5,0.0,,
+classifier,trained:S1,balanced accuracy,5,0.5,0.08838834764831845,,
+classifier,trained:S2,balanced accuracy,5,0.75,0.15934435979977452,,
+classifier,qfi_reference:S1,balanced accuracy,5,0.9875,0.02795084971874737,,
+classifier,qfi_reference:S2,balanced accuracy,5,0.9125,0.07126096406869613,,
+teleportation,teleport_corrections,held-out infidelity,5,0.04505208333333333,0.026702234072648042,0.13157552083333332,0.004177587819571771
+teleportation,teleport_full,held-out infidelity,5,0.4048177083333333,0.08658566577695917,0.520703125,0.042998702273636086
+kernel,clusters:shots,balanced accuracy,5,1.0,0.0,,
+kernel,clusters:exact,balanced accuracy,5,1.0,0.0,,
+kernel,xor:shots,balanced accuracy,5,0.875,0.04419417382415922,,
+kernel,xor:exact,balanced accuracy,5,0.8875,0.128086884574495,,
+noise,clean,clean held-out infidelity,5,0.022558593749999998,0.014715918064914351,,
+noise,bitflip_0.1,clean held-out infidelity,5,0.042154947916666664,0.0477334985897109,,
+noise,bitflip_0.3,clean held-out infidelity,5,0.0439453125,0.026666395662838033,,
+noise,brownian_0.1,clean held-out infidelity,5,0.028873697916666666,0.0073779137094581206,,
+noise,brownian_0.3,clean held-out infidelity,5,0.08743489583333333,0.04869725300001758,,
+noise,resource_0.01,clean held-out infidelity,5,0.0166015625,0.009838594570122015,,
+noise,resource_0.05,clean held-out infidelity,5,0.02366536458333333,0.011782212959777397,,

@@ -55,6 +55,79 @@ seeds or reproduce a published dataset.
 The reusable objectives support larger parameter sets, entangling-gate targets,
 and full twenty-angle instrument training; the runner keeps demonstrations small.
 
+## Figure 1 baseline notebook
+
+[`notebooks/hardware_agnostic_baseline.ipynb`](notebooks/hardware_agnostic_baseline.ipynb)
+runs a five-seed training and held-out inference battery for the hardware-agnostic
+reference, before topological-qubit modifications. It includes full four/eight-angle
+gate learning; four-slot greedy, neural DQN, and continuous Adam comparisons; both
+classifier state families; correction-only and cold-start twenty-angle teleportation;
+finite-shot and exact-kernel SVMs; fixed label-noise training; and resource-noise and
+inference-shot sweeps. All fits, including unsuccessful ones, are retained.
+
+Install the notebook dependencies into the environment above, then execute every
+cell from the repository root:
+
+```sh
+.venv/bin/python -m pip install -r muta/requirements-notebook.txt
+PATH="$PWD/.venv/bin:$PATH" .venv/bin/python -m jupyter nbconvert \
+  --to notebook --execute --inplace \
+  --ExecutePreprocessor.kernel_name=python3 \
+  --ExecutePreprocessor.timeout=7200 \
+  muta/notebooks/hardware_agnostic_baseline.ipynb
+```
+
+Alternatively select this environment's Python kernel in VS Code and **Run All**.
+The headless command uses Bash/Zsh syntax; on Windows, select the environment's
+kernel in the notebook editor. Reference execution is deliberately more expensive
+than the small examples: the saved five-seed run took approximately **73 minutes**
+on the local simulator. The actual environment, package versions, wall time, seeds, source
+hashes, data hashes, and artifact hashes are recorded. There are no hardware
+submissions or credentials.
+
+`Config` in the parameter cell exposes the dataset sizes, shots, seeds, and
+evaluation budgets. Run All starts fresh and overwrites `muta/artifacts/reference/`;
+change `OUTPUT` to preserve another experiment. The notebook saves models and
+datasets, discards the training objects, and reloads them in a fresh QDK context
+before inference. Source/configuration or dataset changes invalidate that reload.
+All quantum work and optimizers remain in Q#; `benchmarks.py` only orchestrates,
+persists, and analyzes calls to `MuTA.Benchmarks`.
+
+| Artifact in `muta/artifacts/reference/` | Contents |
+| --- | --- |
+| `figure-1.pdf`, `.svg`, `.png` | Six-panel candidate Figure 1; vector PDF, editable-text SVG, and 300-dpi PNG. |
+| `diagnostics.pdf`, `.svg`, `.png` | Discrete convergence, corruption sensitivity, classifier scores, shot calibration, and logical graph counts. |
+| `datasets.json`, `models.json` | Explicit independent train/test data, fitted parameters, histories, ordered SVM training vectors, and fixed label-noise programs. |
+| `results.json`, `summary.csv` | Raw held-out results, per-branch teleportation counts, shot/noise sweeps, and across-seed summaries. |
+| `figure-1-caption.txt`, `manifest.json` | Suggested caption and reproducibility metadata. |
+
+The executed notebook contains an evaluation, not just plots. Training incumbents
+are noisy and selection-biased; separate held-out measurements determine reported
+performance. Error bars are **sample SD across seeds**, not confidence intervals.
+The task-informed QFI head and exact kernel are controls, not evidence that the
+learned models outperform classical methods. Small datasets, bounded budgets,
+indefinite shot-estimated Gram matrices, and unsuccessful optimizations remain
+visible. This reference neither reproduces the paper's figures nor establishes
+learning advantage, topological-device performance, physical qubit cost, or QPU
+latency.
+
+The saved reference contains **95 fits**. Mean held-out infidelity fell from
+0.259 to 0.017 for single-qubit gates and from 0.154 to 0.015 for entangling
+gates. The shot-based kernel SVM achieved 100% balanced accuracy on the small
+cluster test sets and 87.5% on XOR. Important limitations remain visible: the
+joint classifier achieved only 50% on S1 and 75% on S2, and cold-start
+twenty-angle teleportation retained 0.405 mean infidelity. These are results
+under the recorded budgets, not an architectural limit or a claim of convergence.
+The notebook reports all seed-level measurements and uncertainty; see
+[`summary.csv`](artifacts/reference/summary.csv) for the numeric summary and
+[`figure-1.pdf`](artifacts/reference/figure-1.pdf) for the main figure.
+
+With the notebook dependencies installed, the usual
+`.venv/bin/python -m pytest muta/tests -q` also executes every notebook cell with
+tiny two-seed budgets and temporary outputs. CI runs this smoke configuration,
+**not** the expensive reference. With only `requirements-dev.txt`, the optional
+notebook tests are explicitly skipped and the Q# suite remains available.
+
 For direct use from Python:
 
 ```python
@@ -208,6 +281,7 @@ walkthrough above; training and prediction calculations remain in Q#.
 | [`MuTA.Applications`](src/Applications.qs) | Gate-learning losses, classifier primitives, the teleportation instrument, kernels and SVMs, and sampled noise programs. |
 | [`MuTA.Expressivity`](src/Expressivity.qs) | Bounded Pauli-word Lie closure and the conditional variance-bound expression from Appendix C. |
 | [`MuTA.Examples`](src/Examples.qs) | Small runnable experiments combining quantum objectives and classical training. |
+| [`MuTA.Benchmarks`](src/Benchmarks.qs) | Dataset, training, and saved-model inference adapters for the baseline notebook; reuses the library algorithms. |
 | [`MuTA.QuantumEntry`](src/QuantumEntry.qs) | A standalone connected-layer quantum workload for QIR export. |
 
 The [paper coverage document](docs/paper-coverage.md) maps each method to the

@@ -16,6 +16,18 @@ angle, and the teleportation example trains correction angles while holding the
 two Bell stages fixed. Their general objective APIs also accept entangling
 targets, complete discrete patterns, and all twenty staged instrument angles.
 
+The repository's
+[`hardware_agnostic_baseline.ipynb`](../notebooks/hardware_agnostic_baseline.ipynb)
+adds a separate, five-seed empirical baseline for a candidate Figure 1. It exercises
+all implemented trainers, full-angle gate and teleportation tasks, both classifier
+families, kernel prediction on unseen points, and label/resource-noise conditions.
+It uses its own small datasets and bounded budgets, not the paper's experimental
+protocol. Models are persisted before independent held-out inference; unsuccessful
+runs, finite-shot selection bias, and indefinite kernel matrices are reported.
+Its logical graph counts and local simulator runtimes do not estimate topological
+hardware costs. See the notebook's configuration, evaluation, and artifact manifest
+for the precise scope of those results.
+
 ## Scope by paper section
 
 | Paper location | Computational method | Implementation scope |

@@ -176,12 +176,38 @@ namespace MuTA.ApplicationTests {
         Message("Application Eq. (5), measured kernels, and SVM optimization tests passed.");
     }
 
+    operation TestBenchmarkTargets() : Unit {
+        for task in [1, 2] {
+            let pattern = MuTA.Benchmarks.GatePattern(task);
+            let angles = task == 1 ? AnglesFromVertices(pattern,
+                [-0.31, -0.19, 0.42, -0.15, 0.0, 0.27, -0.8, -0.23, 0.35, 0.0])
+                | [PI() / 4.0, PI() / 2.0, PI() / 4.0, 0.0];
+            let width = Length(pattern.Inputs);
+            for _ in 1..4 {
+                use input = Qubit[width];
+                use reference = Qubit[width];
+                use output = Qubit[width];
+                for q in 0..width - 1 { H(input[q]); CNOT(input[q], reference[q]); }
+                let _ = Execute(pattern, angles, input, output);
+                Adjoint MuTA.Benchmarks.GateTarget(task, output);
+                for q in 0..width - 1 { CNOT(output[q], reference[q]); H(output[q]); }
+                if not AllZeroAndReset(output + reference) {
+                    fail "Benchmark target is not the documented attainable MuTA channel.";
+                }
+            }
+        }
+        Near(MuTA.Benchmarks.StateQfi(0, PI() / 4.0, 0.8), 4.0, 1e-10, "S1 QFI label");
+        Near(MuTA.Benchmarks.StateQfi(1, PI() / 4.0, PI()), 0.0, 1e-10, "S2 QFI label");
+        Near(MuTA.Benchmarks.StateQfi(1, PI() / 4.0, 0.0), 4.0, 1e-10, "S2 useful QFI label");
+    }
+
     operation ApplicationsSelfTest() : Unit {
         TestStatePreparationAndGateLoss();
         TestNoiseModels();
         TestClassifier();
         TestTeleportation();
         TestKernelsAndSvm();
+        TestBenchmarkTargets();
         Message("All MuTA application self-tests passed.");
     }
 
